@@ -1,0 +1,324 @@
+﻿<!DOCTYPE html>
+<html lang="sr">
+<head>
+	<title>Naslov</title>
+	<meta charset="UTF-8">
+	<style>
+		body{
+			font-size: 2rem;
+		}
+		#wrap{
+			margin: 10px 0;
+		}
+		table{
+			border: 1px solid black;
+		}
+		td{
+			text-align: center;
+			height: 80px;
+			width: 80px;
+			border: 1px solid black;
+		}
+		p{
+			width: 300px;
+		}
+		.iks{
+			color: darkred;
+		}
+		.oks{
+			color: royalblue;
+		}
+	</style>
+</head>
+<body>
+	<h1>IKS-OKS</h1>
+	<div id="wrap">
+		<table>
+			<tr>
+				<td onclick="odigraj(0)"></td>
+				<td onclick="odigraj(1)"></td>
+				<td onclick="odigraj(2)"></td>
+			</tr>
+			<tr>
+				<td onclick="odigraj(3)"></td>
+				<td onclick="odigraj(4)"></td>
+				<td onclick="odigraj(5)"></td>
+			</tr>
+			<tr>
+				<td onclick="odigraj(6)"></td>
+				<td onclick="odigraj(7)"></td>
+				<td onclick="odigraj(8)"></td>
+			</tr>
+		</table>
+	</div>
+	<p id="konzola"></p>
+	
+	<script>
+		var xPobeda=0;
+		var oPobeda=0;
+		var brojac=1;
+		var tabla=[
+			["","",""],
+			["","",""],
+			["","",""]
+		];
+		var pobeda=false;
+		var aiTime=false;
+		
+		function proveriPobeduRed(){
+			var xRed=0;
+			var oRed=0;
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					if(tabla[i][j]=="X"){xRed++;}
+					if(tabla[i][j]=="O"){oRed++;}
+				}
+				if(xRed==3){
+					return "X";
+				}
+				if(oRed==3){
+					return "O";
+				}
+				xRed=0;
+				oRed=0;
+			}
+			return false;
+		}
+		
+		function proveriPobeduKolona(){
+			var xKol=0;
+			var oKol=0;
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					if(tabla[j][i]=="X"){xKol++;}
+					if(tabla[j][i]=="O"){oKol++;}
+				}
+				if(xKol==3){
+					return "X";
+				}
+				if(oKol==3){
+					return "O";
+				}
+				xKol=0;
+				oKol=0;
+			}
+			return false;
+		}
+		
+		function proveriPobeduDijagonala(){
+			var xDi1=0;
+			var xDi2=0;
+			var oDi1=0;
+			var oDi2=0;
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					if(i==j){
+						if(tabla[i][j]=="X"){xDi1++;}
+						if(tabla[i][j]=="O"){oDi1++;}
+					}
+					if(i+j==tabla.length-1){
+						if(tabla[i][j]=="X"){xDi2++;}
+						if(tabla[i][j]=="O"){oDi2++;}
+					}
+				}
+			}
+			if(xDi1==3 || xDi2==3){
+				return "X";
+			}
+			if(oDi1==3 || oDi2==3){
+				return "O";
+			}
+			return false;
+		}
+
+		function novaPartija(){
+			var td=document.getElementsByTagName("td");
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					tabla[i][j]="";
+				}
+			}
+			for(var i=0; i<td.length; i++){
+				td[i].innerHTML="";
+				td[i].className="";
+			}
+			brojac=1;
+			pobeda=false;
+		}
+
+		function ispisPobede(){
+			var konzola=document.getElementById("konzola");
+			var td=document.getElementsByTagName("td");
+			if(proveriPobeduRed()=="X" || proveriPobeduKolona()=="X" || proveriPobeduDijagonala()=="X"){
+				konzola.innerHTML="X pobeda!";
+				konzola.className="iks";
+				pobeda=true;
+				xPobeda++;
+				setTimeout(function(){
+						konzola.className="";
+						konzola.innerHTML="X broj pobeda: "+xPobeda+"<br>O broj pobeda: "+oPobeda;
+						novaPartija();
+					}, 700);
+				return;
+			}
+			if(proveriPobeduRed()=="O" || proveriPobeduKolona()=="O" || proveriPobeduDijagonala()=="O"){
+				konzola.innerHTML="O pobeda!";
+				konzola.className="oks";
+				pobeda=true;
+				oPobeda++;
+				setTimeout(function(){
+						konzola.className="";
+						konzola.innerHTML="X broj pobeda: "+xPobeda+"<br>O broj pobeda: "+oPobeda;
+						novaPartija();
+					}, 700);
+				return;
+			}
+			for(var i=0; i<td.length; i++){
+				if(td[i].innerHTML==""){return;}
+			}
+			konzola.innerHTML="NERESENO";
+				pobeda=true;
+				setTimeout(function(){
+						konzola.innerHTML="X broj pobeda: "+xPobeda+"<br>O broj pobeda: "+oPobeda;
+						novaPartija();
+					}, 700);
+		}
+
+		function bestMove(){
+			var bestScore=1000;
+			var move;
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					if(tabla[i][j]==""){
+						tabla[i][j]="O";
+						var score=miniMax(true);
+						tabla[i][j]="";
+						if(score<bestScore){
+							bestScore=score;
+							move=[i,j];
+						}
+					}
+				}
+			}
+			return move;
+		}
+
+		function miniMax(isMaxim){
+			if(proveriPobeduRed()=="X" || proveriPobeduKolona()=="X" || proveriPobeduDijagonala()=="X"){
+				return 1;
+			}
+			if(proveriPobeduRed()=="O" || proveriPobeduKolona()=="O" || proveriPobeduDijagonala()=="O"){
+				return -1;
+			}
+			var nereseno=true;
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					if(tabla[i][j]==""){nereseno=false;}
+				}
+			}
+			if(nereseno){return 0;}
+			
+			if(isMaxim){
+				var currentScore=-1000;
+				for(var i=0; i<tabla.length; i++){
+					for(var j=0; j<tabla[i].length; j++){
+						if(tabla[i][j]==""){
+							tabla[i][j]="X";
+							var score=miniMax(false);
+							tabla[i][j]="";
+							if(score>currentScore){
+								currentScore=score;
+							}
+						}
+					}
+				}
+				return currentScore;
+			}
+			else{
+				var currentScore=1000;
+				for(var i=0; i<tabla.length; i++){
+					for(var j=0; j<tabla[i].length; j++){
+						if(tabla[i][j]==""){
+							tabla[i][j]="O";
+							var score=miniMax(true);
+							tabla[i][j]="";
+							if(score<currentScore){
+								currentScore=score;
+							}
+						}
+					}
+				}
+				return currentScore;
+			}
+		}
+
+		function aiPlay(){
+			if(pobeda){return;}
+			var brojacTabele=0;
+			var td=document.getElementsByTagName("td");
+			var move=bestMove();
+			
+			for(var i=0; i<tabla.length; i++){
+				for(var j=0; j<tabla[i].length; j++){
+					if(i==move[0] && j==move[1]){
+						tabla[i][j]="O";
+						td[brojacTabele].innerHTML="O";
+						td[brojacTabele].className="oks";
+					}
+					brojacTabele++;
+				}
+			}
+
+			brojac++;
+			ispisPobede();
+		}
+		
+		function odigraj(n){
+			if(pobeda){return;}
+			if(aiTime){return;}
+			var brojacTabele=0;
+			var konzola=document.getElementById("konzola");
+			var td=document.getElementsByTagName("td");
+			if(td[n].innerHTML!=""){
+				return;
+			}
+			if(brojac%2!=0){
+				td[n].innerHTML="X";
+				td[n].className="iks";
+				for(var i=0; i<tabla.length; i++){
+					for(var j=0; j<tabla[i].length; j++){
+						if(brojacTabele==n){
+							tabla[i][j]="X";
+						}
+						brojacTabele++;
+					}
+				}
+			}
+			else{		//visak ako se igra protiv kompa
+				td[n].innerHTML="O";
+				td[n].className="oks";
+				for(var i=0; i<tabla.length; i++){
+					for(var j=0; j<tabla[i].length; j++){
+						if(brojacTabele==n){
+							tabla[i][j]="O";
+						}
+						brojacTabele++;
+					}
+				}
+			}
+			brojac++;
+
+			ispisPobede();
+
+			if(brojac%2==0){		//poziva kompa da igra
+				aiTime=true;
+				setTimeout(function(){
+						aiPlay();
+						aiTime=false;
+					}, 300);
+			}
+		}
+	</script>
+</body>
+
+</html>
